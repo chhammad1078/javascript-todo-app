@@ -1,36 +1,81 @@
+const inputitem = document.getElementById("todoInput");
+const addButton = document.getElementById("addTodoButton");
+const todoList = document.querySelector(".todoList");
 
-      let inputitem = document.getElementById("todoInput");
-      let addButton = document.getElementById("addTodoButton");
-      let todoList = document.getElementById("todoList");
-      addTodoItem = (item) => {
-        let container = document.createElement("div");
-        container.style.display = "flex";
-        container.style.justifyContent = "space-between";
-        container.style.margin = "5px";
-        container.style.padding = "0px 10px";
-        container.style.alignItems = "center";
-        container.style.border="1px solid black";
-        container.style.borderRadius="10px";
+const getTodoListFromLocalStorage = () => {
+  return JSON.parse(localStorage.getItem("todoList"));
+};
 
-        let para = document.createElement("p");
-        para.textContent = item;
+const addTodoListToLocalStorage = (localStorageTodo) => {
+   localStorage.setItem("todoList", JSON.stringify(localStorageTodo));
+};
 
-        let deleteButton = document.createElement("button");
-        deleteButton.textContent="Delete";
+let localStorageTodo = getTodoListFromLocalStorage() || [];
 
-        deleteButton.addEventListener("click", ()=>{
-            if(confirm("Are you sure you want to delete this item?")){
-                container.remove();
-            }
-        })
-        container.appendChild(para);
-        container.appendChild(deleteButton);
-        todoList.appendChild(container);
-        inputitem.value = "";
-      };
+const addTodoItemOnUI = (currTodo) => {
+  const container = document.createElement("div");
+  container.classList.add("todo-item");
+  container.innerHTML = `<li>${currTodo}</li> <button class="delete-btn">Delete</button>`;
+  todoList.appendChild(container);
+};
 
-      addButton.addEventListener("click", () => {
-        addTodoItem(inputitem.value);
-      });
+const addTodoItem = (item) => {
 
-    
+  const exists = localStorageTodo.some((todo) => {
+  return todo.toLowerCase() === item.toLowerCase();
+});
+
+if (exists) {
+  alert("Already exists");
+  inputitem.value="";
+  return;
+}
+
+    localStorageTodo.push(item);
+    addTodoListToLocalStorage(localStorageTodo);
+    addTodoItemOnUI(item);
+    inputitem.value = "";
+};
+
+const showTodoList = () => {
+  localStorageTodo.forEach((currTodo) => {
+    addTodoItemOnUI(currTodo);
+  });
+};
+
+showTodoList();
+
+const removeTodoItem = (e) => {
+  const todoRemoveItem = e.target;
+  const todoListContent = todoRemoveItem.previousElementSibling.innerText;
+  const parentElem=todoRemoveItem.parentElement;
+
+  localStorageTodo = localStorageTodo.filter((currTodo) => {
+    return currTodo !== todoListContent;
+  });
+
+  addTodoListToLocalStorage(localStorageTodo);
+  parentElem.remove();
+};
+
+todoList.addEventListener("click", (e) => {
+  e.preventDefault();
+
+  if (e.target.classList.contains("delete-btn"))
+    { 
+      removeTodoItem(e);
+    }
+});
+
+addButton.addEventListener("click", (e) => {
+  e.preventDefault();
+
+  const item = inputitem.value.trim();
+
+  if (item === "") {
+    alert("Please enter a task.");
+    return;
+  }
+
+  addTodoItem(item);
+});
